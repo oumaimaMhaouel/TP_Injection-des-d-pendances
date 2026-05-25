@@ -30,9 +30,9 @@ Utilisés à partir de la présentation **3** (Spring XML), **4** (annotations) 
 
 | Mode | Spring XML (`PresSpringXML`) | Spring annotations (`PresSpringAnnotation`) | JAXB (`Pres3`) |
 |------|------------------------------|--------------------------------------------|----------------|
-| **a** | `config.xml` | `MetierSpringConstructeur` | `ioc-config.xml` |
-| **b** |  | | `ioc-config-setter.xml` |
-| **c** |  | | `ioc-config-champ.xml` |
+| **a** | `config.xml` | `MetierImpl` (constructeur) | `ioc-config.xml` |
+| **b** | `config-setter.xml` | idem + `setDao` | code (`MetierImplSetter`) |
+| **c** | `config-field.xml` | idem + champ `iDao` | code (`MetierImplSetter`) |
 
 ## Prérequis
 
@@ -58,8 +58,8 @@ TP_inversion_de_controle/
     │       ├── PresSpringAnnotation.java  # 4
     │       └── Pres3.java                 # 5 Mini projet
     └── resources/
-        ├── config.xml / config-setter.xml / config-field.xml
-        └── ioc-config.xml / ioc-config-setter.xml / ioc-config-champ.xml
+        ├── config.xml / config-setter.xml / config-field.xml   # Spring (PresSpringXML)
+        └── ioc-config.xml                                    # JAXB (Pres3)
 ```
 
 ## Modèle fonctionnel
@@ -70,14 +70,15 @@ TP_inversion_de_controle/
 | `DaoImpl` | Source « base de données » (`@Component("d")`) |
 | `DaoImplV2` | Source « capteur » (`ext`) |
 | `IMetier` | Contrat métier (`calcul()`) |
-| `MetierImpl` | Métier sans Spring (Pres1, Pres2, Pres3, Spring XML) |
+| `MetierImpl` | Métier sans Spring (Pres1, Pres2, Pres3 constructeur, Spring XML) |
+| `MetierImplSetter` | Sous-classe avec constructeur vide — injection setter/champ (Pres3) |
 
 ### Changer d’implémentation DAO
 
 | Fichier | Modification |
 |---------|--------------|
 | `config.txt` | 1ʳᵉ ligne : `net.pres.ext.DaoImplV2` |
-| `ioc-config*.xml` | `<dao>net.pres.ext.DaoImplV2</dao>` |
+| `ioc-config.xml` | `<dao>net.pres.ext.DaoImplV2</dao>` |
 | Spring | Adapter le bean `d` ou `@Qualifier` |
 
 ---
@@ -139,35 +140,47 @@ Pour basculer vers le capteur, il faudrait par exemple qualifier `DaoImplV2` et 
 
 ## 5. `Pres3` — IoC manuelle (XML + JAXB / OXM)
 
-**OXM** (*Object XML Mapping*) : le XML est mappé vers `Configuration` via **Jakarta XML Binding (JAXB)**, puis `IocAssembler` injecte le DAO par réflexion.
+**OXM** (*Object XML Mapping*) : un seul fichier `ioc-config.xml` est lu avec **Jakarta XML Binding (JAXB)** dans la classe `Configuration`, puis `IocAssembler` assemble le métier par réflexion.
 
-### Fichiers (`src/main/resources/`)
+### Fichier `src/main/resources/ioc-config.xml`
 
 ```xml
 <configuration>
     <dao>net.pres.dao.DaoImpl</dao>
     <metier>net.pres.metier.MetierImpl</metier>
-    <injection>constructeur</injection>   <!-- ou setter, champ -->
+    <injection>constructeur</injection>
 </configuration>
 ```
 
-| Fichier | `<injection>` |
-|---------|---------------|
-| `ioc-config.xml` | `constructeur` |
-| `ioc-config-setter.xml` | `setter` |
-| `ioc-config-champ.xml` | `champ` |
+| Balise | Rôle |
+|--------|------|
+| `<dao>` | Classe du DAO instanciée par réflexion |
+| `<metier>` | Classe du métier pour le mode décrit par `<injection>` |
+| `<injection>` | `constructeur`, `setter` ou `champ` (voir valeurs ci-dessous) |
 
-Valeurs acceptées : `constructeur` / `constructor`, `setter`, `champ` / `field` / `attribut`.
+Valeurs acceptées pour `<injection>` : `constructeur` / `constructor`, `setter`, `champ` / `field` / `attribut`.
 
-| Mode | Mécanisme dans `IocAssembler` |
-|------|-------------------------------|
-| **a** | `getConstructor(IDao.class).newInstance(dao)` |
-| **b** | `newInstance()` + `setDao(dao)` |
-| **c** | `newInstance()` + `Field.set` sur `iDao` |
+### Déroulement de `Pres3`
 
-`Pres3` exécute les **trois** fichiers `ioc-config*` et affiche le mode + le résultat pour chacun.
+1. Charger `ioc-config.xml` une fois (`charger` + JAXB).
+2. **Constructeur** : `IocAssembler.assemble(config)` utilise le contenu du XML (`dao`, `metier`, `injection`).
+3. **Setter** et **champ** : même `<dao>` que dans le XML, métier `MetierImplSetter` (constructeur sans argument requis pour `setDao` / accès au champ `iDao`).
 
-> `ioc-config.xml` (JAXB) et `config.xml` (Spring) sont deux fichiers distincts.
+| Mode | Classe métier | Mécanisme dans `IocAssembler` |
+|------|---------------|-------------------------------|
+| **a. Constructeur** | `MetierImpl` (via XML) | `getConstructor(IDao.class).newInstance(dao)` |
+| **b. Setter** | `MetierImplSetter` (dans le code) | `newInstance()` + `setDao(dao)` |
+| **c. Champ** | `MetierImplSetter` (dans le code) | `newInstance()` + `Field.set` sur `iDao` |
+
+Sortie console attendue (trois lignes) :
+
+```text
+injection=constructeur RES=...
+injection=setter RES=...
+injection=champ RES=...
+```
+
+> `ioc-config.xml` (JAXB, Pres3) et `config.xml` (Spring, `PresSpringXML`) sont deux fichiers distincts.
 
 ---
 
@@ -185,7 +198,7 @@ Lancer les classes `main` **dans l’ordre du TP** :
 | 2 | `Pres2` | `version base de données` + `RES=...` |
 | 3 | `PresSpringXML` | Trois lignes (constructeur, setter, champ) |
 | 4 | `PresSpringAnnotation` | Trois lignes (annotations) |
-| 5 | `Pres3` | Trois lignes (`ioc-config*`) |
+| 5 | `Pres3` | Trois lignes (`constructeur`, `setter`, `champ`) |
 
 ---
 
