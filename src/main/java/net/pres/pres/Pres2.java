@@ -18,10 +18,10 @@ public class Pres2 {
         IDao dao = (IDao) cDao.newInstance();
         String metierClasseName = scanner.next();
         Class cMertier = Class.forName(metierClasseName);
-        //IMetier metier = (IMetier) cMertier.getConstructor(IDao.class).newInstance(dao);
-        IMetier metier=(IMetier) cMertier.getConstructor().newInstance();
-        Method setDao=cMertier.getMethod("setDao", IDao.class);
-        setDao.invoke(metier,dao);
+        IMetier metier = (IMetier) cMertier.getConstructor(IDao.class).newInstance(dao);
+        //IMetier metier=(IMetier) cMertier.getConstructor().newInstance();
+        //Method setDao=cMertier.getMethod("setDao", IDao.class);
+        //setDao.invoke(metier,dao);
         System.out.println("RES="+metier.calcul());
     }
 }
