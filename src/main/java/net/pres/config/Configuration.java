@@ -6,12 +6,12 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "configuration")
 public class Configuration {
 
+    public Configuration() {
+    }
+
     private String dao;
     private String metier;
     private String injection;
-
-    public Configuration() {
-    }
 
     @XmlElement
     public String getDao() {
@@ -36,7 +36,4 @@ public class Configuration {
         return injection;
     }
 
-    public void setInjection(String injection) {
-        this.injection = injection;
-    }
 }

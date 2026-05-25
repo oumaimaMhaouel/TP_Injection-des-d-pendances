@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Type d'injection (balise <injection>) :
-    a) constructeur  — instanciation MetierImpl(IDao)
-    b) setter        — setDao(IDao) après constructeur vide
-    c) champ         — accès direct au champ iDao (réflexion)
--->
 <configuration>
     <dao>net.pres.dao.DaoImpl</dao>
-    <metier>net.pres.metier.MetierImpl</metier>
+    <metier>net.pres.metier.MetierImplSetter</metier>
     <injection>constructeur</injection>
 </configuration>

@@ -13,12 +13,18 @@ public final class IocAssembler {
     }
 
     public static IMetier assemble(Configuration configuration) throws ReflectiveOperationException {
-        Class<?> daoClass = Class.forName(configuration.getDao());
+        return assemble(
+                configuration.getDao(),
+                configuration.getMetier(),
+                InjectionType.fromXml(configuration.getInjection()));
+    }
+
+    public static IMetier assemble(String daoClassName, String metierClassName, InjectionType type)
+            throws ReflectiveOperationException {
+        Class<?> daoClass = Class.forName(daoClassName);
         IDao dao = (IDao) daoClass.getDeclaredConstructor().newInstance();
 
-        Class<?> metierClass = Class.forName(configuration.getMetier());
-        InjectionType type = InjectionType.fromXml(configuration.getInjection());
-
+        Class<?> metierClass = Class.forName(metierClassName);
         return switch (type) {
             case CONSTRUCTEUR -> injectByConstructeur(metierClass, dao);
             case SETTER -> injectBySetter(metierClass, dao);

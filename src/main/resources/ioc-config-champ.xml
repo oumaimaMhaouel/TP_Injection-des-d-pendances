@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<configuration>
-    <dao>net.pres.dao.DaoImpl</dao>
-    <metier>net.pres.metier.MetierImpl</metier>
-    <injection>champ</injection>
-</configuration>
