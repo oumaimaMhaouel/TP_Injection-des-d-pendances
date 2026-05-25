@@ -1,0 +1,2 @@
+net.pres.dao.DaoImpl
+net.pres.metier.MetierImpl
