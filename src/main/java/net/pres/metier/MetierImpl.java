@@ -1,19 +1,24 @@
 package net.pres.metier;
 
 import net.pres.dao.IDao;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
+@Component("metier")
 
 public class MetierImpl implements IMetier {
+
     private IDao iDao;
     /**
      * Pour injecter dans l'attribut dao un objet d'une classe qui implémente l'interface IDao
      * au moment de l'instanciation
      */
-    public MetierImpl(IDao iDao) {
+    public MetierImpl(@Qualifier("d") IDao iDao) {
         this.iDao = iDao;
     }
 
-    public MetierImpl() {
-    }
+
 
     @Override
     public double calcul() {
